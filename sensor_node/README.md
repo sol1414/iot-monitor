@@ -12,6 +12,9 @@ Pico 2W センサーノード（MicroPython）
 | ジャンプワイヤー | 電源供給 | 3.3V ピン → DS18B20 VDD | — |
 | ジャンプワイヤー | GND | GND ピン → DS18B20 GND | — |
 
+### 回路イメージ
+<img width="450" height="450" alt="temp sensor circuit" src="../assets/sensor_circuit.png" />
+
 
 ## セットアップ
 
