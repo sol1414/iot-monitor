@@ -1,0 +1,23 @@
+---
+# Play 1: アプリ + RTC（RTCがリブートすると meta: end_play でここで終わる）
+- name: Setup App and RTC
+  hosts: all
+  become: true
+  roles:
+    - app
+    - rtc
+
+# Play 2: AP（最終タスクでAPをActiveにする）
+- name: Setup Access Point
+  hosts: all
+  become: true
+  gather_facts: false  # wait_for_connection より先に Gathering Facts が走るのを防ぐ
+  pre_tasks:
+    - name: Pi 4 が応答するまで待機（RTCリブート後の再接続）
+      ansible.builtin.wait_for_connection:
+        delay: 5
+        timeout: 120
+    - name: Gather facts after reconnection
+      ansible.builtin.setup:
+  roles:
+    - access-point

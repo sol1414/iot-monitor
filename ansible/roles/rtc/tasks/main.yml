@@ -1,0 +1,73 @@
+---
+# Minimal RTC setup for Debian on Raspberry Pi (DS3231 over I2C)
+# - Enables I2C + DS3231 RTC overlay in /boot/firmware/config.txt
+# - Removes fake-hwclock
+# - Installs hwclock (util-linux-extra)
+# - If boot config changed, triggers reboot and ends play (run playbook twice)
+
+- name: Install required packages (hwclock + i2c-tools)
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    name:
+      - i2c-tools
+      - util-linux-extra
+    state: present
+
+- name: Remove fake-hwclock (conflicts with real RTC)
+  become: true
+  ansible.builtin.apt:
+    name: fake-hwclock
+    state: absent
+    purge: true
+
+- name: Remove /etc/adjtime (will be recreated by hwclock)
+  become: true
+  ansible.builtin.file:
+    path: /etc/adjtime
+    state: absent
+
+- name: Enable I2C on GPIO (dtparam)
+  become: true
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/config.txt
+    line: "dtparam=i2c_arm=on"
+    state: present
+    insertafter: EOF
+  register: bootcfg_i2c
+
+- name: Ensure i2c-bcm2835 overlay is set
+  become: true
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/config.txt
+    line: "dtoverlay=i2c-bcm2835"
+    state: present
+    insertafter: EOF
+  register: bootcfg_i2cbcm
+
+- name: Enable DS3231 RTC overlay
+  become: true
+  ansible.builtin.lineinfile:
+    path: /boot/firmware/config.txt
+    line: "dtoverlay=i2c-rtc,ds3231"
+    state: present
+    insertafter: EOF
+  register: bootcfg_rtc
+
+- name: Trigger reboot (async) if boot config changed
+  become: true
+  ansible.builtin.shell: "sleep 2 && /sbin/reboot"
+  async: 1
+  poll: 0
+  when: bootcfg_i2c.changed or bootcfg_i2cbcm.changed or bootcfg_rtc.changed
+
+- name: End play after triggering reboot
+  ansible.builtin.meta: end_play
+  when: bootcfg_i2c.changed or bootcfg_i2cbcm.changed or bootcfg_rtc.changed
+
+# 2nd run onwards (no reboot needed): sync system time from RTC (best-effort)
+- name: Sync system time from RTC (best-effort)
+  become: true
+  ansible.builtin.command: hwclock -s
+  changed_when: false
+  failed_when: false

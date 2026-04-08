@@ -1,0 +1,71 @@
+---
+- name: Reset Pi 4 to default state
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    # ----- App -----
+    - name: Stop and disable IoT server
+      ansible.builtin.systemd:
+        name: iot-server
+        state: stopped
+        enabled: false
+      ignore_errors: true
+
+    - name: Stop and disable IoT dashboard
+      ansible.builtin.systemd:
+        name: iot-dashboard
+        state: stopped
+        enabled: false
+      ignore_errors: true
+
+    - name: Remove service files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/systemd/system/iot-server.service
+        - /etc/systemd/system/iot-dashboard.service
+
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: true
+
+    - name: Remove application directory
+      ansible.builtin.file:
+        path: /opt/iot_monitor
+        state: absent
+
+    # ----- RTC -----
+    - name: Remove DS3231 RTC overlay from boot config
+      ansible.builtin.lineinfile:
+        path: /boot/firmware/config.txt
+        line: "dtoverlay=i2c-rtc,ds3231"
+        state: absent
+
+    - name: Remove i2c-bcm2835 overlay from boot config
+      ansible.builtin.lineinfile:
+        path: /boot/firmware/config.txt
+        line: "dtoverlay=i2c-bcm2835"
+        state: absent
+
+    - name: Restore fake-hwclock
+      ansible.builtin.apt:
+        name: fake-hwclock
+        state: present
+
+    - name: Remove /etc/adjtime
+      ansible.builtin.file:
+        path: /etc/adjtime
+        state: absent
+
+    # ----- Access Point -----
+    - name: Remove AP connection profile
+      ansible.builtin.file:
+        path: /etc/NetworkManager/system-connections/pigfarm-ap.nmconnection
+        state: absent
+
+    - name: Restart NetworkManager
+      ansible.builtin.systemd:
+        name: NetworkManager
+        state: restarted

@@ -1,0 +1,30 @@
+---
+- name: Deploy IoT server service
+  ansible.builtin.template:
+    src: iot-server.service.j2
+    dest: /etc/systemd/system/iot-server.service
+    mode: "0644"
+  notify: Restart IoT server
+
+- name: Deploy IoT dashboard service
+  ansible.builtin.template:
+    src: iot-dashboard.service.j2
+    dest: /etc/systemd/system/iot-dashboard.service
+    mode: "0644"
+  notify: Restart IoT dashboard
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Enable and start IoT server
+  ansible.builtin.systemd:
+    name: iot-server
+    state: started
+    enabled: true
+
+- name: Enable and start IoT dashboard
+  ansible.builtin.systemd:
+    name: iot-dashboard
+    state: started
+    enabled: true

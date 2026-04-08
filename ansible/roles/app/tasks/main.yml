@@ -1,0 +1,13 @@
+---
+- name: Install system packages
+  ansible.builtin.import_tasks: install.yml
+
+- name: Deploy application files
+  ansible.builtin.import_tasks: deploy.yml
+
+- name: Setup systemd services
+  ansible.builtin.import_tasks: setup-systemd.yml
+
+# AP 有効化の前にサービス再起動ハンドラを確実に完了させる
+- name: Flush handlers before AP activates
+  ansible.builtin.meta: flush_handlers

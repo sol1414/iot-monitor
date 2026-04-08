@@ -1,0 +1,22 @@
+# ---- データ ----
+data/*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# ---- テスト ----
+server/tests/test_data.db
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+
+# ---- uv ----
+.python-version
+
+# ---- 環境変数・秘匿情報 ----
+.env
+
+# ---- OS ----
+.DS_Store

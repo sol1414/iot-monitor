@@ -1,0 +1,57 @@
+---
+- name: Create application directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: "0755"
+  loop:
+    - "{{ app_dir }}"
+    - "{{ app_dir }}/data"
+    - "{{ app_dir }}/server"
+    - "{{ app_dir }}/client"
+
+- name: Deploy server files
+  ansible.posix.synchronize:
+    src: "../../../../server/"
+    dest: "{{ app_dir }}/server/"
+    rsync_opts:
+      - "--exclude=.venv"
+      - "--exclude=__pycache__"
+      - "--exclude=*.pyc"
+    delete: false
+  notify: Restart IoT server
+
+- name: Deploy client files
+  ansible.posix.synchronize:
+    src: "../../../../client/"
+    dest: "{{ app_dir }}/client/"
+    rsync_opts:
+      - "--exclude=.venv"
+      - "--exclude=__pycache__"
+      - "--exclude=*.pyc"
+    delete: false
+  notify: Restart IoT dashboard
+
+- name: Remove stale server .venv
+  ansible.builtin.file:
+    path: "{{ app_dir }}/server/.venv"
+    state: absent
+
+- name: Remove stale client .venv
+  ansible.builtin.file:
+    path: "{{ app_dir }}/client/.venv"
+    state: absent
+
+- name: Install server dependencies
+  become_user: "{{ app_user }}"
+  ansible.builtin.command:
+    cmd: "{{ uv_bin }} sync"
+    chdir: "{{ app_dir }}/server"
+
+- name: Install client dependencies
+  become_user: "{{ app_user }}"
+  ansible.builtin.command:
+    cmd: "{{ uv_bin }} sync"
+    chdir: "{{ app_dir }}/client"

@@ -1,0 +1,23 @@
+[connection]
+id=pigfarm-ap
+type=wifi
+autoconnect=true
+interface-name={{ ap_interface }}
+
+[wifi]
+mode=ap
+ssid={{ ap_ssid }}
+
+[wifi-security]
+group=ccmp;
+key-mgmt=wpa-psk
+pairwise=ccmp;
+proto=rsn;
+psk={{ ap_password }}
+
+[ipv4]
+address1={{ ap_ip }}/24,{{ ap_ip }}
+method=shared
+
+[ipv6]
+method=disabled

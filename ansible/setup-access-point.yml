@@ -1,0 +1,6 @@
+---
+- name: Setup Access Point
+  hosts: all
+  become: true
+  roles:
+    - access-point

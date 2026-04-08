@@ -1,0 +1,11 @@
+# ----- WiFi AP 設定 -----
+ap_ssid: "pigfarm-ap"
+ap_password: "pigfarm123"
+ap_interface: "wlan0"
+ap_ip: "192.168.50.1" # APの固定IPアドレス（Domainとかあるなら後々追加）
+
+# ----- アプリケーション設定 -----
+app_dir: "/opt/iot_monitor"
+app_user: "{{ ansible_user }}"
+server_port: 8000
+uv_bin: "/home/{{ ansible_user }}/.local/bin/uv"

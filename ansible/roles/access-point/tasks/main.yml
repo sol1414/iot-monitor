@@ -1,0 +1,65 @@
+---
+- name: Get CYW43455 firmware alternatives state
+  ansible.builtin.shell:
+    cmd: update-alternatives --query cyfmac43455-sdio.bin 2>/dev/null
+  register: firmware_query
+  changed_when: false
+  failed_when: false
+
+- name: Register minimal firmware as alternative if not registered
+  ansible.builtin.command:
+    cmd: update-alternatives --install /lib/firmware/cypress/cyfmac43455-sdio.bin cyfmac43455-sdio.bin /lib/firmware/cypress/cyfmac43455-sdio-minimal.bin 50
+  changed_when: true
+  when: "'cyfmac43455-sdio-minimal.bin' not in firmware_query.stdout"
+
+- name: Switch CYW43455 to minimal firmware for AP+client support
+  ansible.builtin.command:
+    cmd: update-alternatives --set cyfmac43455-sdio.bin /lib/firmware/cypress/cyfmac43455-sdio-minimal.bin
+  register: firmware_switch
+  changed_when: true
+  when: "'Value: /lib/firmware/cypress/cyfmac43455-sdio-minimal.bin' not in firmware_query.stdout"
+
+- name: Reboot to apply firmware change
+  ansible.builtin.reboot:
+    reboot_timeout: 120
+  when: firmware_switch is defined and firmware_switch.changed
+
+- name: Install NetworkManager
+  ansible.builtin.apt:
+    name: network-manager
+    state: present
+    update_cache: true
+
+- name: Ensure NetworkManager is running
+  ansible.builtin.systemd:
+    name: NetworkManager
+    state: started
+    enabled: true
+
+- name: Deploy AP connection profile
+  ansible.builtin.template:
+    src: pigfarm-ap.nmconnection.j2
+    dest: /etc/NetworkManager/system-connections/pigfarm-ap.nmconnection
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Reload NetworkManager connection profiles
+  ansible.builtin.command: nmcli connection reload
+  changed_when: false
+
+- name: Verify active connections before AP activation
+  ansible.builtin.shell: nmcli -t -f NAME,STATE connection show --active
+  register: nm_status
+  changed_when: false
+
+- name: Display active connections
+  ansible.builtin.debug:
+    var: nm_status.stdout_lines
+
+# AP を上げると SSH が切れるため、最後にファイア＆フォゲットで実行
+- name: Activate AP connection (fire-and-forget)
+  ansible.builtin.command: nmcli con up pigfarm-ap
+  async: 5
+  poll: 0
+  when: "'pigfarm-ap:activated' not in nm_status.stdout"

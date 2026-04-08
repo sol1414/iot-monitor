@@ -1,0 +1,14 @@
+[Unit]
+Description=IoT Monitor FastAPI Server
+After=network.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+WorkingDirectory={{ app_dir }}
+ExecStart={{ app_dir }}/server/.venv/bin/uvicorn server.main:app --host 0.0.0.0 --port {{ server_port }}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

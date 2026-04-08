@@ -1,0 +1,10 @@
+---
+- name: Restart IoT server
+  ansible.builtin.systemd:
+    name: iot-server
+    state: restarted
+
+- name: Restart IoT dashboard
+  ansible.builtin.systemd:
+    name: iot-dashboard
+    state: restarted

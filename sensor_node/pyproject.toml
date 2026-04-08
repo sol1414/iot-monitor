@@ -1,0 +1,18 @@
+[project]
+name = "iot-monitor-sensor-node"
+version = "0.1.0"
+description = "Pico W sensor node firmware (MicroPython)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "mpremote>=1.27.0",
+]
+
+[dependency-groups]
+dev = ["ruff>=0.11.0"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]

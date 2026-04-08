@@ -1,0 +1,6 @@
+---
+- name: Setup RTC (DS3231)
+  hosts: all
+  become: true
+  roles:
+    - rtc

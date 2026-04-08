@@ -1,0 +1,11 @@
+[project]
+name = "iot-monitor-client"
+version = "0.1.0"
+description = "Streamlit ダッシュボード（Pi 4 上で稼働）"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27.0",
+    "streamlit>=1.37.0",
+    "plotly>=5.22.0",
+    "pandas>=2.2.0",
+]

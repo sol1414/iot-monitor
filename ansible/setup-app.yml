@@ -1,0 +1,6 @@
+---
+- name: Setup App
+  hosts: all
+  become: true
+  roles:
+    - app
