@@ -13,3 +13,8 @@
   ansible.builtin.shell:
     cmd: curl -LsSf https://astral.sh/uv/install.sh | sh
     creates: "/home/{{ app_user }}/.local/bin/uv"
+
+- name: Update uv
+  become_user: "{{ app_user }}"
+  ansible.builtin.command:
+    cmd: "{{ uv_bin }} self update"
